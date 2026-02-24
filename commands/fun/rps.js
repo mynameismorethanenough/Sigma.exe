@@ -1,4 +1,5 @@
 const { base, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 const CHOICES = ['🪨 Rock', '📄 Paper', '✂️ Scissors'];
 const wins = { 0: 2, 1: 0, 2: 1 }; // index that beats each
 

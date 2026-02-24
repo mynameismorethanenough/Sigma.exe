@@ -10,6 +10,7 @@
 
 const db = require('../../database/db');
 const { missingPerm, success, warn, base, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 const { EmbedBuilder } = require('discord.js');
 
 const PLATFORMS = ['youtube', 'twitch', 'twitter', 'tiktok', 'reddit', 'instagram'];

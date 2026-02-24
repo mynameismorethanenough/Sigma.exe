@@ -1,4 +1,4 @@
-# ConnectBot v12
+# ConnectBot v5
 
 A bleed-style Discord bot with moderation, security, music, Spotify integration, and more.
 

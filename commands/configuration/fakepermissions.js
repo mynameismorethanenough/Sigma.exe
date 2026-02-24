@@ -9,6 +9,7 @@
  */
 const db = require('../../database/db');
 const { missingPerm, success, warn, base, Colors } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
 
 const VALID_PERMS = [
   'administrator', 'manage_guild', 'manage_channels', 'manage_roles',

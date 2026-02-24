@@ -7,6 +7,8 @@
 const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, botMissingPerm, base, Colors, success, warn } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 
 const PER_PAGE = 10;
 
@@ -14,7 +16,7 @@ module.exports = {
   name: 'hardban',
   aliases: ['hban2', 'permban'],
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.BanMembers))
+    if (!message.member.permissions.has(PermissionFlagsBits.BanMembers) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'ban_members')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.BanMembers))
       return message.channel.send({ embeds: [botMissingPerm(message.author, 'ban_members')] });

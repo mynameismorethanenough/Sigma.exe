@@ -1,6 +1,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, success, warn, base, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'enable',
@@ -8,7 +9,7 @@ module.exports = {
   category: 'configuration',
 
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_guild')] });
 
     if (!args[0]) return message.channel.send({ embeds: [base(Colors.neutral)

@@ -1,11 +1,13 @@
 const { PermissionFlagsBits } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, botMissingPerm, base, Colors, E, warn } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'mute',
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_messages')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.ManageRoles))
       return message.channel.send({ embeds: [botMissingPerm(message.author, 'manage_roles')] });
@@ -20,7 +22,7 @@ module.exports = {
     const muteRole = guild.roles.cache.get(muteRoleId);
     if (!muteRole) return message.channel.send({ embeds: [warn(`${author}: Muted role not found — re-configure with \`${prefix}settings muted @role\``)] });
 
-    const member = message.mentions.members.first() ?? guild.members.cache.get(args[0]);
+    const member = message.mentions.members.first() ?? await resolveMember(message.guild, client, args[0]);
     if (!member) return message.channel.send({ embeds: [base(Colors.warn)
       .setDescription(`⚠️ ${author}: Usage: \`${prefix}mute @user [reason]\``)] });
 

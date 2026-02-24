@@ -1,5 +1,6 @@
 const https = require('https');
 const { base, Colors, warn } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 function get(url) {
   return new Promise((res, rej) => {

@@ -1,10 +1,11 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { missingPerm, cmdHelp, base, Colors, success } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'rolecreate',
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageRoles))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageRoles) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_roles')] });
 
     if (!args[0]) return message.channel.send({ embeds: [cmdHelp({ author: message.author, name: 'rolecreate', description: 'Creates a role with optional color', aliases: 'N/A', parameters: 'name, color', info: '⚠️ Manage Roles', usage: 'rolecreate <name> [hex color]', example: 'rolecreate Members #ff0000', module: 'moderation' })] });

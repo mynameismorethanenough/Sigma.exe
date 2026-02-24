@@ -8,6 +8,8 @@
 const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, base, Colors, success, warn } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 
 const TYPE_EMOJI = { ban: '🔨', tempban: '⏱️', hardban: '🔒', softban: '🧹', kick: '👢', mute: '🔇', unmute: '🔊', imute: '🖼️', rmute: '💬', warn: '⚠️', timeout: '⏱️', jail: '🔒', softban: '🧹' };
 
@@ -15,7 +17,7 @@ module.exports = {
   name: 'history',
   aliases: ['moderationhistory', 'modhistory', 'mh'],
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers))
+    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'moderate_members')] });
 
     const { guild, author } = message;

@@ -1,12 +1,13 @@
 const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, base, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'jaillist',
   aliases: ['jailed', 'jailview'],
   run: async (client, message, args) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_messages')] });
 
     const { guild, author } = message;

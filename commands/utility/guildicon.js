@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { warn, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'guildicon',

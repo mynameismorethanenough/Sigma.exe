@@ -1,6 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const db = require('../../database/db');
 const { base, success, error, warn, Colors, E } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
 
 const PUNISHMENT_ICONS = { ban: '🔨 Ban', kick: '👢 Kick', strip: '🪤 Strip Roles', timeout: '⏱️ Timeout' };
 
@@ -150,8 +151,9 @@ module.exports = {
   aliases: ['an', 'nuke'],
 
   run: async (client, message, args, prefix) => {
-    if (message.author.id !== message.guild.ownerId)
-      return message.channel.send({ embeds: [error(`${message.author}: Only the **server owner** can manage antinuke`)] });
+    const { isOwner } = require('../../utils/owner');
+    if (message.author.id !== message.guild.ownerId && !isOwner(message.author.id))
+      return message.channel.send({ embeds: [error(`${message.author}: Only the **server owner** or **bot owner** can manage antinuke`)] });
 
     await db.ensureGuild(message.guild.id, message.guild.name);
     const sub = args[0]?.toLowerCase();

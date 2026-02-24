@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { base, warn, success, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 // Parse a custom emoji string like <:name:id> or <a:name:id>
 function parseEmoji(str) {

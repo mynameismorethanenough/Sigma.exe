@@ -1,5 +1,6 @@
 const { EmbedBuilder, ChannelType } = require('discord.js');
 const { base, warn, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 const CH_TYPE = {
   [ChannelType.GuildText]:          '💬 Text',

@@ -1,16 +1,18 @@
 const { PermissionFlagsBits } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, base, Colors } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 const typeEmoji = { ban:'🔨', kick:'👢', warn:'⚠️', timeout:'⏱️', mute:'🔇' };
 
 module.exports = {
   name: 'cases',
   aliases: ['infractions', 'history'],
   run: async (client, message, args) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers))
+    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'moderate_members')] });
 
-    const user = message.mentions.users.first() ?? message.guild.members.cache.get(args[0])?.user;
+    const user = message.mentions.users.first() ?? (await resolveMember(message.guild, client, args[0]))?.user;
     if (!user) return message.channel.send({ embeds: [base(Colors.warn).setDescription(`⚠️ ${message.author}: Mention a user`)] });
 
     const records = await db.getUserInfractions(message.guild.id, user.id).catch(() => []);

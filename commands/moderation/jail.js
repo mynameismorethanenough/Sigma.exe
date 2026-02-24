@@ -1,6 +1,8 @@
 const { PermissionFlagsBits } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, botMissingPerm, cmdHelp, base, Colors, E, success, warn } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 
 function parseDuration(str) {
   const match = str?.match(/^(\d+)(s|m|h|d|w)$/i);
@@ -23,7 +25,7 @@ module.exports = {
   aliases: ['j'],
 
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_messages')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.ManageRoles))
       return message.channel.send({ embeds: [botMissingPerm(message.author, 'manage_roles')] });
@@ -45,7 +47,7 @@ module.exports = {
     const jailRole = message.guild.roles.cache.get(cfg.jail_role_id);
     if (!jailRole) return message.channel.send({ embeds: [warn(`${message.author}: Jail role not found — run \`${prefix}jailsetup\` again`)] });
 
-    const member = message.mentions.members.first() ?? message.guild.members.cache.get(args[0]);
+    const member = message.mentions.members.first() ?? await resolveMember(message.guild, client, args[0]);
     if (!member) return message.channel.send({ embeds: [warn(`${message.author}: **Invalid member**`)] });
     if (member.id === message.author.id) return message.channel.send({ embeds: [base(Colors.error).setDescription(`${E.deny} ${message.author}: You cannot jail **yourself**`)] });
     if (!member.manageable) return message.channel.send({ embeds: [warn(`${message.author}: I cannot manage that member (hierarchy)`)] });

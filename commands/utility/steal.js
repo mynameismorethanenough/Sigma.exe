@@ -1,11 +1,12 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { missingPerm, success, warn, base, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'steal',
   aliases: ['emojisteal', 'addemoji'],
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageEmojisAndStickers))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageEmojisAndStickers) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_emojis')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.ManageEmojisAndStickers))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_emojis')] });

@@ -1,5 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { warn, Colors } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'avatar',
@@ -7,8 +9,7 @@ module.exports = {
   category: 'utility',
 
   run: async (client, message, args) => {
-    const member = message.mentions.members.first()
-      ?? message.guild.members.cache.get(args[0])
+    const member = message.mentions.members.first() ?? await resolveMember(message.guild, client, args[0])
       ?? message.member;
 
     const user = await client.users.fetch(member.id, { force: true }).catch(() => member.user);

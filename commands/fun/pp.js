@@ -1,4 +1,6 @@
 const { base, Colors } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'pp',

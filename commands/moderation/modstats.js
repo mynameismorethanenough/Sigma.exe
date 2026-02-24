@@ -1,16 +1,18 @@
 const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, base, Colors } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'modstats',
   aliases: ['modstats', 'moderatorstats'],
   run: async (client, message, args) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers))
+    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'moderate_members')] });
 
     const { guild, author } = message;
-    const target = message.mentions.users.first() ?? message.guild.members.cache.get(args[0])?.user ?? message.author;
+    const target = message.mentions.users.first() ?? (await resolveMember(message.guild, client, args[0]))?.user ?? message.author;
 
     const rows = await db.getModStats(guild.id, target.id).catch(() => []);
     if (!rows.length) return message.channel.send({ embeds: [base(Colors.neutral)

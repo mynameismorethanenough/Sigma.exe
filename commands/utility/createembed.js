@@ -1,11 +1,12 @@
 const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { missingPerm, base, Colors, warn } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'createembed',
   aliases: ['ce', 'embed'],
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_messages')] });
 
     if (!args[0]) return message.channel.send({ embeds: [base(Colors.warn)

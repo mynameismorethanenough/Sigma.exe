@@ -32,6 +32,7 @@ if (process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET) {
 (async () => {
   console.log('🗄️  Connecting to database...');
   await db.migrate();
+  await db.migrateV12plus().catch(e => console.warn('V12+ migrate warning:', e.message));
 
   console.log('📦 Loading handlers...');
   require('./handlers/commandHandler')(client);
@@ -169,7 +170,12 @@ if (process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET) {
     // the prefix, try parsing it as a bare command anyway.
     // ═══════════════════════════════════════════════════════════
     let args, cmd;
-    const ownerMode = isOwner(message.author.id) && isNoPrefixEnabled() && !message.content.startsWith(prefix);
+    // Check if user has a DB-granted no-prefix (non-owner users granted by owner)
+    const dbNoPrefix = !isOwner(message.author.id) && await db.isNoprefixUser(message.author.id).catch(() => false);
+    const ownerMode  = (
+      (isOwner(message.author.id) && isNoPrefixEnabled() && !message.content.startsWith(prefix)) ||
+      (dbNoPrefix && !message.content.startsWith(prefix))
+    );
 
     if (ownerMode) {
       // Only fire if the first word matches a real command or alias

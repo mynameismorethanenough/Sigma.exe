@@ -6,11 +6,12 @@
 const { PermissionFlagsBits } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, base, Colors, success } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'unlock',
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_channels')] });
 
     const { guild, author } = message;

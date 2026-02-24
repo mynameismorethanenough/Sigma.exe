@@ -1,12 +1,13 @@
 const { PermissionFlagsBits } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, base, Colors, success, warn } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'reason',
   aliases: ['updatereason', 'editreason'],
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers))
+    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'moderate_members')] });
 
     const caseId = parseInt(args[0]);

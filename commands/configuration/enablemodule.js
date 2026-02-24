@@ -7,6 +7,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 const db  = require('../../database/db');
 const { missingPerm, success, warn, base, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 const MODULES = ['configuration', 'moderation', 'information', 'security', 'music', 'fun', 'utility', 'roleplay'];
 
@@ -15,7 +16,7 @@ module.exports = {
   aliases: ['enablemod', 'moduleon'],
 
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_guild')] });
 
     const { guild, author } = message;

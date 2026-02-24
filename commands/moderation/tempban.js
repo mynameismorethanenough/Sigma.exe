@@ -1,6 +1,8 @@
 const { PermissionFlagsBits } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, botMissingPerm, base, Colors, E } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 
 function parseDuration(str) {
   const match = str?.match(/^(\d+)(s|m|h|d|w)$/i);
@@ -18,13 +20,13 @@ module.exports = {
   name: 'tempban',
   aliases: ['tban'],
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.BanMembers))
+    if (!message.member.permissions.has(PermissionFlagsBits.BanMembers) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'ban_members')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.BanMembers))
       return message.channel.send({ embeds: [botMissingPerm(message.author, 'ban_members')] });
 
     const { guild, author } = message;
-    const member = message.mentions.members.first() ?? guild.members.cache.get(args[0]);
+    const member = message.mentions.members.first() ?? await resolveMember(message.guild, client, args[0]);
 
     if (!member) return message.channel.send({ embeds: [base(Colors.warn)
       .setDescription(`⚠️ ${author}: Usage: \`${prefix}tempban @user <duration> [reason]\`\nDuration: \`1m\` \`1h\` \`1d\` \`1w\``)] });

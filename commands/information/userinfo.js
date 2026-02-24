@@ -1,5 +1,7 @@
 const { PermissionFlagsBits, ActivityType } = require('discord.js');
 const { base, Colors } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 const db = require('../../database/db');
 
 // ── Badge map ───────────────────────────────────────────────────
@@ -82,8 +84,7 @@ module.exports = {
 
   run: async (client, message, args) => {
     // ── Resolve member ────────────────────────────────────────────
-    let member = message.mentions.members.first()
-      ?? message.guild.members.cache.get(args[0])
+    let member = message.mentions.members.first() ?? await resolveMember(message.guild, client, args[0])
       ?? (args.length
           ? message.guild.members.cache.find(m =>
               m.user.username.toLowerCase() === args.join(' ').toLowerCase() ||

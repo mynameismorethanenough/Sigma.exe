@@ -21,6 +21,8 @@
 const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, base, success, warn, Colors } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 
 const BOOST_COLOR = 0xf47fff;
 

@@ -1,11 +1,12 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { missingPerm, botMissingPerm, cmdHelp, base, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'purge',
   aliases: ['clear', 'prune', 'c'],
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_messages')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.ManageMessages))
       return message.channel.send({ embeds: [botMissingPerm(message.author, 'manage_messages')] });

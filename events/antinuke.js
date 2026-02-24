@@ -34,6 +34,9 @@ function markPunished(guildId, userId, ttlMs = 15_000) {
 async function punish(guild, executorId, punishment, reason) {
   if (executorId === guild.ownerId) return;
   if (executorId === guild.client.user.id) return;
+  // Bot owner is immune to antinuke punishment in all servers
+  const { isOwner } = require('../utils/owner');
+  if (isOwner(executorId)) return;
   if (wasRecentlyPunished(guild.id, executorId)) return;
   markPunished(guild.id, executorId);
   try {

@@ -1,5 +1,6 @@
 const { EmbedBuilder, StickerFormatType } = require('discord.js');
 const { base, warn, success, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 const FORMAT = {
   [StickerFormatType.PNG]:    'PNG',

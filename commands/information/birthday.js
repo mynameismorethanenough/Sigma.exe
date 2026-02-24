@@ -1,5 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { warn, success, base, Colors } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 const db = require('../../database/db');
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -189,8 +191,7 @@ module.exports = {
     }
 
     // ── birthday <@member> or no arg = self ──────────────────────
-    const target = message.mentions.members.first()
-      ?? message.guild.members.cache.get(args[0])
+    const target = message.mentions.members.first() ?? await resolveMember(message.guild, client, args[0])
       ?? message.member;
 
     const row = await db.getBirthday(message.guild.id, target.id);

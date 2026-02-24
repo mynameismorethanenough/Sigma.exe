@@ -4,6 +4,7 @@
  */
 const { PermissionFlagsBits } = require('discord.js');
 const { missingPerm, success, warn, base, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'setbanner',
@@ -11,7 +12,7 @@ module.exports = {
   category: 'configuration',
 
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_guild')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.ManageGuild))
       return message.channel.send({ embeds: [warn(`${message.author}: I'm missing **Manage Guild** permission`)] });

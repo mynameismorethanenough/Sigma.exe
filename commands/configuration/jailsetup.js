@@ -1,6 +1,7 @@
 const { PermissionFlagsBits, ChannelType } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, botMissingPerm, base, Colors, success, warn } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 /**
  * Apply jail permission overwrites to every channel in the guild.
@@ -69,7 +70,7 @@ module.exports = {
   aliases: ['jailconfig', 'setupjail'],
 
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_guild')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.ManageRoles))
       return message.channel.send({ embeds: [botMissingPerm(message.author, 'manage_roles')] });

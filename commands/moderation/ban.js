@@ -1,18 +1,20 @@
 const { PermissionFlagsBits } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, botMissingPerm, cmdHelp, base, Colors, E } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'ban',
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.BanMembers))
+    if (!message.member.permissions.has(PermissionFlagsBits.BanMembers) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'ban_members')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.BanMembers))
       return message.channel.send({ embeds: [botMissingPerm(message.author, 'ban_members')] });
 
     if (!args[0]) return message.channel.send({ embeds: [cmdHelp({ author: message.author, name: 'ban', description: 'Bans the mentioned user from the guild', aliases: 'N/A', parameters: 'member, reason', info: '⚠️ Ban Members', usage: 'ban (member) <reason>', example: 'ban @user Threatening members', module: 'moderation' })] });
 
-    const member = message.mentions.members.first() ?? message.guild.members.cache.get(args[0]);
+    const member = message.mentions.members.first() ?? await resolveMember(message.guild, client, args[0]);
     const reason = args.slice(1).join(' ') || 'No Reason Supplied';
 
     if (!member) return message.channel.send({ embeds: [base(Colors.warn).setDescription(`⚠️ ${message.author}: **Invalid User**. Do \`${prefix}ban\` to see usage`)] });

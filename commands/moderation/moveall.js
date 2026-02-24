@@ -1,11 +1,12 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { missingPerm, base, Colors, success, warn } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'moveall',
   aliases: ['movemembers', 'moveall'],
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.MoveMembers))
+    if (!message.member.permissions.has(PermissionFlagsBits.MoveMembers) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'move_members')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.MoveMembers))
       return message.channel.send({ embeds: [base(Colors.warn).setDescription(`⚠️ ${message.author}: I need **Move Members** permission`)] });

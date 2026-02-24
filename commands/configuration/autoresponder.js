@@ -12,6 +12,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 const db  = require('../../database/db');
 const { missingPerm, success, warn, base, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 const AR_COLOR = 0x9b59b6;
 const AR_VARS  = [
@@ -44,7 +45,7 @@ module.exports = {
   aliases: ['ar', 'autoresponse', 'autorespond'],
 
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_guild')] });
 
     const { guild, author } = message;

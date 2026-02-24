@@ -1,6 +1,7 @@
 const { PermissionFlagsBits } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, base, success, warn, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 const PROTECTED = ['disable', 'enable', 'help']; // can't be disabled
 
@@ -10,7 +11,7 @@ module.exports = {
   category: 'configuration',
 
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_guild')] });
 
     if (!args[0]) return message.channel.send({ embeds: [base(Colors.neutral)

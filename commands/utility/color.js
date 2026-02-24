@@ -1,4 +1,5 @@
 const { base } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);

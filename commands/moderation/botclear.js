@@ -1,10 +1,11 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { missingPerm } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'botclear',
   run: async (client, message, args) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_messages')] });
     const amount = parseInt(args[0]) || 20;
     const msgs = await message.channel.messages.fetch({ limit: Math.min(amount, 100) });

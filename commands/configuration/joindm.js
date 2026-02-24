@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, success, warn, base, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 function applyVars(str, user, guild) {
   return str

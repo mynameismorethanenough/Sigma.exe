@@ -1,5 +1,6 @@
 const db = require('../../database/db');
 const { base, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'snipe',

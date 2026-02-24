@@ -1,5 +1,6 @@
 const db = require('../../database/db');
 const { base, Colors, success } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'afk',

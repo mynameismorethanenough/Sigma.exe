@@ -1,18 +1,20 @@
 const { PermissionFlagsBits } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, botMissingPerm, base, Colors, success } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'softban',
   aliases: ['sban'],
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.BanMembers))
+    if (!message.member.permissions.has(PermissionFlagsBits.BanMembers) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'ban_members')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.BanMembers))
       return message.channel.send({ embeds: [botMissingPerm(message.author, 'ban_members')] });
 
     const { guild, author } = message;
-    const member = message.mentions.members.first() ?? guild.members.cache.get(args[0]);
+    const member = message.mentions.members.first() ?? await resolveMember(message.guild, client, args[0]);
 
     if (!member) return message.channel.send({ embeds: [base(Colors.warn)
       .setDescription(`⚠️ ${author}: Usage: \`${prefix}softban @user [reason]\`\nSoftban bans then immediately unbans to purge messages.`)] });

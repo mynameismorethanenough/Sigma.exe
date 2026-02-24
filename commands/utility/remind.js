@@ -1,4 +1,5 @@
 const { base, Colors, cmdHelp } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 function parseTime(str) {
   const match = str?.match(/^(\d+)(s|m|h|d)$/i);

@@ -1,5 +1,6 @@
 const { ChannelType, GuildVerificationLevel, GuildExplicitContentFilter, GuildDefaultMessageNotifications, GuildNSFWLevel } = require('discord.js');
 const { base, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 // ── Lookup maps ─────────────────────────────────────────────────
 const VERIFY = {

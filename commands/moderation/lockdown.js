@@ -10,12 +10,13 @@
 const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, base, Colors, success, warn } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'lockdown',
   aliases: ['lock'],
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageChannels) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_channels')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.ManageChannels))
       return message.channel.send({ embeds: [base(Colors.warn).setDescription(`\u26a0\ufe0f ${message.author}: I need **Manage Channels** permission`)] });

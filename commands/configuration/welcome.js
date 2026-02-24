@@ -8,6 +8,7 @@
 const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, success, warn, base, Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 const WELCOME_COLOR = 0x57f287;
 
 function ordinal(n) {
@@ -53,7 +54,7 @@ const VARS_LIST = [
 module.exports = {
   name: 'welcome', aliases: ['welc', 'wlc'],
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_guild')] });
     await db.ensureGuild(message.guild.id, message.guild.name);
     const { guild, author } = message;

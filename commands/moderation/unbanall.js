@@ -7,12 +7,13 @@
  */
 const { PermissionFlagsBits } = require('discord.js');
 const { missingPerm, base, Colors, success, warn } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 module.exports = {
   name: 'unbanall',
   aliases: ['unbanall'],
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.BanMembers))
+    if (!message.member.permissions.has(PermissionFlagsBits.BanMembers) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'ban_members')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.BanMembers))
       return message.channel.send({ embeds: [base(Colors.warn).setDescription(`⚠️ ${message.author}: I need **Ban Members** permission`)] });

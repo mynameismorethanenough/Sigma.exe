@@ -4,6 +4,8 @@
  */
 const { PermissionFlagsBits } = require('discord.js');
 const { missingPerm, base, Colors, success, warn } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 
 const DANGEROUS_PERMS = [
   PermissionFlagsBits.Administrator,
@@ -22,13 +24,13 @@ module.exports = {
   name: 'stripstaff',
   aliases: ['strip', 'destaff'],
   run: async (client, message, args) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild))
+    if (!message.member.permissions.has(PermissionFlagsBits.ManageGuild) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'manage_guild')] });
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.ManageRoles))
       return message.channel.send({ embeds: [base(Colors.warn).setDescription(`⚠️ ${message.author}: I need **Manage Roles**`)] });
 
     const { guild, author } = message;
-    const member = message.mentions.members.first() ?? guild.members.cache.get(args[0]);
+    const member = message.mentions.members.first() ?? await resolveMember(message.guild, client, args[0]);
 
     if (!member) return message.channel.send({ embeds: [base(Colors.warn).setDescription(`⚠️ ${author}: Mention a member to strip staff permissions from`)] });
     if (member.id === guild.ownerId) return message.channel.send({ embeds: [warn(`${author}: Cannot strip the server owner`)] });

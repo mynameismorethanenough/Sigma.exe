@@ -1297,3 +1297,207 @@ module.exports = {
   getProfile, setProfile,
   getBadgeConfig, setBadgeConfig, addBadgeRole, removeBadgeRole, getBadgeRoles, syncMemberBadges, getMemberBadges,
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// V12+ ADDITIONS: Server whitelist, guild join tracking, per-user noprefix
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── Tables (appended to migrate) ─────────────────────────────────────────────
+// These are created in the migrate() call above but since migrate is already
+// called, we patch them here with a standalone initialiser called at startup.
+async function migrateV12plus() {
+  await q(`
+    CREATE TABLE IF NOT EXISTS server_whitelist (
+      guild_id   VARCHAR(20) PRIMARY KEY,
+      added_by   VARCHAR(20) NOT NULL,
+      reason     TEXT,
+      added_at   TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+  await q(`
+    CREATE TABLE IF NOT EXISTS guild_join_log (
+      guild_id     VARCHAR(20) PRIMARY KEY,
+      guild_name   TEXT,
+      inviter_id   VARCHAR(20),
+      inviter_tag  TEXT,
+      member_count INT,
+      joined_at    TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+  await q(`
+    CREATE TABLE IF NOT EXISTS noprefix_users (
+      user_id    VARCHAR(20) PRIMARY KEY,
+      granted_by VARCHAR(20) NOT NULL,
+      granted_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+  // hardban_list (added in v12 session — create if missing)
+  await q(`
+    CREATE TABLE IF NOT EXISTS hardban_list (
+      guild_id  VARCHAR(20),
+      user_id   VARCHAR(20),
+      reason    TEXT,
+      banned_by VARCHAR(20),
+      banned_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (guild_id, user_id)
+    );
+  `);
+  // lockdown ignore list
+  await q(`
+    CREATE TABLE IF NOT EXISTS lockdown_ignore (
+      guild_id   VARCHAR(20),
+      channel_id VARCHAR(20),
+      added_by   VARCHAR(20),
+      added_at   TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (guild_id, channel_id)
+    );
+  `);
+}
+
+// ── Server Whitelist ──────────────────────────────────────────────────────────
+async function isServerWhitelisted(guildId) {
+  const { rows } = await q('SELECT 1 FROM server_whitelist WHERE guild_id=$1 LIMIT 1', [guildId]);
+  return rows.length > 0;
+}
+async function addServerWhitelist(guildId, addedBy, reason = 'No reason') {
+  await q(`INSERT INTO server_whitelist (guild_id, added_by, reason) VALUES ($1,$2,$3)
+    ON CONFLICT (guild_id) DO UPDATE SET added_by=$2, reason=$3, added_at=NOW()`,
+    [guildId, addedBy, reason]);
+}
+async function removeServerWhitelist(guildId) {
+  const { rowCount } = await q('DELETE FROM server_whitelist WHERE guild_id=$1', [guildId]);
+  return rowCount > 0;
+}
+async function getServerWhitelist() {
+  const { rows } = await q('SELECT * FROM server_whitelist ORDER BY added_at DESC');
+  return rows;
+}
+async function getServerWhitelistEntry(guildId) {
+  const { rows } = await q('SELECT * FROM server_whitelist WHERE guild_id=$1', [guildId]);
+  return rows[0] ?? null;
+}
+
+// ── Guild Join Log ────────────────────────────────────────────────────────────
+async function logGuildJoin(guildId, guildName, inviterId, inviterTag, memberCount) {
+  await q(`INSERT INTO guild_join_log (guild_id, guild_name, inviter_id, inviter_tag, member_count, joined_at)
+    VALUES ($1,$2,$3,$4,$5,NOW())
+    ON CONFLICT (guild_id) DO UPDATE SET guild_name=$2, inviter_id=$3, inviter_tag=$4, member_count=$5, joined_at=NOW()`,
+    [guildId, guildName, inviterId ?? null, inviterTag ?? null, memberCount]);
+}
+async function getGuildJoinLog(guildId) {
+  const { rows } = await q('SELECT * FROM guild_join_log WHERE guild_id=$1', [guildId]);
+  return rows[0] ?? null;
+}
+async function getAllGuildJoinLogs() {
+  const { rows } = await q('SELECT * FROM guild_join_log ORDER BY joined_at DESC');
+  return rows;
+}
+
+// ── Per-User No-Prefix ────────────────────────────────────────────────────────
+async function addNoprefixUser(userId, grantedBy) {
+  await q(`INSERT INTO noprefix_users (user_id, granted_by) VALUES ($1,$2)
+    ON CONFLICT (user_id) DO UPDATE SET granted_by=$2, granted_at=NOW()`,
+    [userId, grantedBy]);
+}
+async function removeNoprefixUser(userId) {
+  const { rowCount } = await q('DELETE FROM noprefix_users WHERE user_id=$1', [userId]);
+  return rowCount > 0;
+}
+async function isNoprefixUser(userId) {
+  const { rows } = await q('SELECT 1 FROM noprefix_users WHERE user_id=$1 LIMIT 1', [userId]);
+  return rows.length > 0;
+}
+async function getNoprefixUsers() {
+  const { rows } = await q('SELECT * FROM noprefix_users ORDER BY granted_at DESC');
+  return rows;
+}
+
+// ── Hardban (v12 — in case missing from earlier session) ─────────────────────
+async function addHardban(guildId, userId, reason, bannedBy) {
+  await q(`INSERT INTO hardban_list (guild_id, user_id, reason, banned_by)
+    VALUES ($1,$2,$3,$4)
+    ON CONFLICT (guild_id, user_id) DO UPDATE SET reason=$3, banned_by=$4, banned_at=NOW()`,
+    [guildId, userId, reason ?? 'No reason', bannedBy]);
+}
+async function removeHardban(guildId, userId) {
+  const { rowCount } = await q('DELETE FROM hardban_list WHERE guild_id=$1 AND user_id=$2', [guildId, userId]);
+  return rowCount > 0;
+}
+async function getHardbans(guildId) {
+  const { rows } = await q('SELECT * FROM hardban_list WHERE guild_id=$1 ORDER BY banned_at DESC', [guildId]);
+  return rows;
+}
+async function isHardbanned(guildId, userId) {
+  const { rows } = await q('SELECT 1 FROM hardban_list WHERE guild_id=$1 AND user_id=$2 LIMIT 1', [guildId, userId]);
+  return rows.length > 0;
+}
+
+// ── Lockdown ignore (v12) ─────────────────────────────────────────────────────
+async function getLockdownIgnoreList(guildId) {
+  const { rows } = await q('SELECT * FROM lockdown_ignore WHERE guild_id=$1', [guildId]);
+  return rows;
+}
+async function addLockdownIgnore(guildId, channelId, addedBy) {
+  await q(`INSERT INTO lockdown_ignore (guild_id, channel_id, added_by)
+    VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`, [guildId, channelId, addedBy]);
+}
+async function removeLockdownIgnore(guildId, channelId) {
+  const { rowCount } = await q('DELETE FROM lockdown_ignore WHERE guild_id=$1 AND channel_id=$2', [guildId, channelId]);
+  return rowCount > 0;
+}
+async function isLockdownIgnored(guildId, channelId) {
+  const { rows } = await q('SELECT 1 FROM lockdown_ignore WHERE guild_id=$1 AND channel_id=$2 LIMIT 1', [guildId, channelId]);
+  return rows.length > 0;
+}
+
+// ── Infraction helpers (v12) ──────────────────────────────────────────────────
+async function getInfractionById(id) {
+  const { rows } = await q('SELECT * FROM infractions WHERE id=$1', [id]);
+  return rows[0] ?? null;
+}
+async function updateInfractionReason(id, reason) {
+  await q('UPDATE infractions SET reason=$1 WHERE id=$2', [reason, id]);
+}
+async function deleteInfraction(guildId, id) {
+  const { rowCount } = await q('DELETE FROM infractions WHERE guild_id=$1 AND id=$2', [guildId, id]);
+  return rowCount > 0;
+}
+async function deleteAllInfractions(guildId, userId) {
+  const { rowCount } = await q('DELETE FROM infractions WHERE guild_id=$1 AND target_user_id=$2', [guildId, userId]);
+  return rowCount;
+}
+async function getUserWarnings(guildId, userId) {
+  const { rows } = await q(`SELECT * FROM infractions WHERE guild_id=$1 AND target_user_id=$2 AND type='warn' ORDER BY created_at DESC`, [guildId, userId]);
+  return rows;
+}
+async function getModStats(guildId, modUserId) {
+  const { rows } = await q(`SELECT type, COUNT(*)::int AS count FROM infractions WHERE guild_id=$1 AND mod_user_id=$2 GROUP BY type`, [guildId, modUserId]);
+  return rows;
+}
+async function getAllModStats(guildId) {
+  const { rows } = await q(`SELECT mod_user_id, type, COUNT(*)::int AS count FROM infractions WHERE guild_id=$1 GROUP BY mod_user_id, type ORDER BY count DESC`, [guildId]);
+  return rows;
+}
+async function getJailedList(guildId) {
+  const { rows } = await q('SELECT * FROM jailed_members WHERE guild_id=$1 ORDER BY jailed_at DESC', [guildId]);
+  return rows;
+}
+
+const _v12exports = module.exports;
+module.exports = {
+  ..._v12exports,
+  migrateV12plus,
+  // Whitelist
+  isServerWhitelisted, addServerWhitelist, removeServerWhitelist, getServerWhitelist, getServerWhitelistEntry,
+  // Join log
+  logGuildJoin, getGuildJoinLog, getAllGuildJoinLogs,
+  // No-prefix users
+  addNoprefixUser, removeNoprefixUser, isNoprefixUser, getNoprefixUsers,
+  // Hardban
+  addHardban, removeHardban, getHardbans, isHardbanned,
+  // Lockdown ignore
+  getLockdownIgnoreList, addLockdownIgnore, removeLockdownIgnore, isLockdownIgnored,
+  // Infraction helpers
+  getInfractionById, updateInfractionReason, deleteInfraction, deleteAllInfractions,
+  getUserWarnings, getModStats, getAllModStats, getJailedList,
+};

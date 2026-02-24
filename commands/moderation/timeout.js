@@ -6,6 +6,8 @@
 const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const db = require('../../database/db');
 const { missingPerm, botMissingPerm, base, Colors, warn } = require('../../utils/embeds');
+const { resolveMember, resolveUser } = require('../../utils/resolve');
+const { isOwner } = require('../../utils/owner');
 
 function parseDuration(str) {
   const match = str?.match(/^(\d+)(s|m|h|d|w)$/i);
@@ -23,7 +25,7 @@ module.exports = {
   name: 'timeout',
   aliases: ['to'],
   run: async (client, message, args, prefix) => {
-    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers))
+    if (!message.member.permissions.has(PermissionFlagsBits.ModerateMembers) && !isOwner(message.author.id))
       return message.channel.send({ embeds: [missingPerm(message.author, 'moderate_members')] });
 
     const { guild, author } = message;
@@ -54,7 +56,7 @@ module.exports = {
     if (!message.guild.members.me.permissions.has(PermissionFlagsBits.ModerateMembers))
       return message.channel.send({ embeds: [botMissingPerm(author, 'moderate_members')] });
 
-    const member = message.mentions.members.first() ?? guild.members.cache.get(args[0]);
+    const member = message.mentions.members.first() ?? await resolveMember(message.guild, client, args[0]);
     if (!member) return message.channel.send({ embeds: [base(Colors.warn)
       .setDescription(`⚠️ ${author}: Usage: \`${prefix}timeout @user <duration> [reason]\`\nDuration: \`1m\` \`1h\` \`1d\` (max 28d)\n\`${prefix}timeout list\` — view timed out members`)] });
 

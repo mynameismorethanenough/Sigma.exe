@@ -1,5 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { Colors } = require('../../utils/embeds');
+const { isOwner } = require('../../utils/owner');
 
 const PER_PAGE = 20;
 
